@@ -17,14 +17,15 @@ import org.buffer.android.boilerplate.remote.BufferooRemoteImpl
 import org.buffer.android.boilerplate.remote.BufferooServiceFactory
 import org.buffer.android.boilerplate.ui.BuildConfig
 import org.buffer.android.boilerplate.ui.UiThread
+import org.buffer.android.boilerplate.ui.browse.BrowseActivity
 import org.buffer.android.boilerplate.ui.browse.BrowseAdapter
 import org.buffer.android.boilerplate.ui.browse.BrowseBufferoosViewModel
 import org.koin.android.ext.koin.androidContext
-import org.koin.android.viewmodel.ext.koin.viewModel
-import org.koin.dsl.module.module
+import org.koin.android.viewmodel.dsl.viewModel
+import org.koin.core.qualifier.named
+import org.koin.dsl.module
 
 val applicationModule = module(override=true) {
-
     single { PreferencesHelper(androidContext()) }
 
     factory { org.buffer.android.boilerplate.remote.mapper.BufferooEntityMapper() }
@@ -37,9 +38,9 @@ val applicationModule = module(override=true) {
             .build() }
     factory { get<BufferoosDatabase>().cachedBufferooDao() }
 
-    factory<BufferooDataStore>("remote") { BufferooRemoteImpl(get(), get()) }
-    factory<BufferooDataStore>("local") { BufferooCacheImpl(get(), get(), get()) }
-    factory { BufferooDataStoreFactory(get("local"), get("remote")) }
+    factory<BufferooDataStore>(named("remote")) { BufferooRemoteImpl(get(), get()) }
+    factory<BufferooDataStore>(named("local")) { BufferooCacheImpl(get(), get(), get()) }
+    factory { BufferooDataStoreFactory(get(named("local")), get(named("remote"))) }
 
     factory { BufferooEntityMapper() }
     factory { BufferooServiceFactory.makeBuffeoorService(BuildConfig.DEBUG) }
@@ -47,8 +48,11 @@ val applicationModule = module(override=true) {
     factory<BufferooRepository> { BufferooDataRepository(get()) }
 }
 
-val browseModule = module("Browse", override = true) {
-    factory { BrowseAdapter() }
+val browseModule = module(override = true) {
+    scope(named<BrowseActivity>()) {
+        scoped { BrowseAdapter() }
+    }
+
     factory { GetBufferoos(get(), get(), get()) }
     viewModel { BrowseBufferoosViewModel(get()) }
 }

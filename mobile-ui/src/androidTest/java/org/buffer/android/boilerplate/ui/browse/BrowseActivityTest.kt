@@ -3,9 +3,7 @@ package org.buffer.android.boilerplate.ui.browse
 import android.support.test.espresso.Espresso.onView
 import android.support.test.espresso.assertion.ViewAssertions.matches
 import android.support.test.espresso.contrib.RecyclerViewActions
-import android.support.test.espresso.matcher.ViewMatchers.hasDescendant
-import android.support.test.espresso.matcher.ViewMatchers.withId
-import android.support.test.espresso.matcher.ViewMatchers.withText
+import android.support.test.espresso.matcher.ViewMatchers.*
 import android.support.test.rule.ActivityTestRule
 import android.support.test.runner.AndroidJUnit4
 import android.support.v7.widget.RecyclerView
@@ -22,35 +20,35 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.koin.standalone.StandAloneContext.loadKoinModules
-import org.koin.standalone.inject
+import org.koin.core.context.loadKoinModules
 import org.koin.test.KoinTest
-import org.koin.test.declareMock
+import org.koin.test.mock.declareMock
 
 @RunWith(AndroidJUnit4::class)
 class BrowseActivityTest: KoinTest {
 
-    val mockBufferooRepository: BufferooRepository by inject()
-
     @Rule @JvmField
     val activity = ActivityTestRule<BrowseActivity>(BrowseActivity::class.java, false, false)
+
+    var bufferoos: List<Bufferoo> = listOf()
 
     @Before
     fun setUp() {
         loadKoinModules(applicationModule, browseModule)
-        declareMock<BufferooRepository>()
+        declareMock<BufferooRepository> {
+            whenever(getBufferoos()).thenReturn(Flowable.just(bufferoos))
+        }
     }
 
     @Test
     fun activityLaunches() {
-        stubBufferooRepositoryGetBufferoos(Flowable.just(BufferooFactory.makeBufferooList(2)))
+        bufferoos = BufferooFactory.makeBufferooList(2)
         activity.launchActivity(null)
     }
 
     @Test
     fun bufferoosDisplay() {
-        val bufferoos = BufferooFactory.makeBufferooList(1)
-        stubBufferooRepositoryGetBufferoos(Flowable.just(bufferoos))
+        bufferoos = BufferooFactory.makeBufferooList(1)
         activity.launchActivity(null)
 
         checkBufferooDetailsDisplay(bufferoos[0], 0)
@@ -58,8 +56,7 @@ class BrowseActivityTest: KoinTest {
 
     @Test
     fun bufferoosAreScrollable() {
-        val bufferoos = BufferooFactory.makeBufferooList(20)
-        stubBufferooRepositoryGetBufferoos(Flowable.just(bufferoos))
+        bufferoos = BufferooFactory.makeBufferooList(20)
         activity.launchActivity(null)
 
         bufferoos.forEachIndexed { index, bufferoo ->
@@ -73,11 +70,6 @@ class BrowseActivityTest: KoinTest {
                 .check(matches(hasDescendant(withText(bufferoo.name))))
         onView(RecyclerViewMatcher.withRecyclerView(R.id.recycler_browse).atPosition(position))
                 .check(matches(hasDescendant(withText(bufferoo.title))))
-    }
-
-    private fun stubBufferooRepositoryGetBufferoos(single: Flowable<List<Bufferoo>>) {
-        whenever(mockBufferooRepository.getBufferoos())
-                .thenReturn(single)
     }
 
 }

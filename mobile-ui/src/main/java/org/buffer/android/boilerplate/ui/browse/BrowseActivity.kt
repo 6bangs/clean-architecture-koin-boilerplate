@@ -5,29 +5,23 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
-import kotlinx.android.synthetic.main.activity_browse.progress
-import kotlinx.android.synthetic.main.activity_browse.recycler_browse
-import kotlinx.android.synthetic.main.activity_browse.view_empty
-import kotlinx.android.synthetic.main.activity_browse.view_error
+import kotlinx.android.synthetic.main.activity_browse.*
 import org.buffer.android.boilerplate.data.browse.Bufferoo
 import org.buffer.android.boilerplate.ui.R
 import org.buffer.android.boilerplate.ui.widget.empty.EmptyListener
 import org.buffer.android.boilerplate.ui.widget.error.ErrorListener
-import org.koin.android.ext.android.inject
-import org.koin.android.scope.ext.android.bindScope
-import org.koin.android.scope.ext.android.getCurrentScope
+import org.koin.android.scope.currentScope
 import org.koin.android.viewmodel.ext.android.viewModel
 
 class BrowseActivity: AppCompatActivity() {
 
-    val browseAdapter: BrowseAdapter by inject()
+    val browseAdapter: BrowseAdapter by currentScope.inject()
 
     val browseBufferoosViewModel: BrowseBufferoosViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_browse)
-        bindScope(getCurrentScope())
 
         setupBrowseRecycler()
         setupViewListeners()
