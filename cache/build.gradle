@@ -3,65 +3,37 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 
 android {
-    def globalConfiguration = rootProject.extensions.getByName("ext")
-
-    compileSdkVersion globalConfiguration["androidCompileSdkVersion"]
+    compileSdkVersion rootProject.ext.versions.compileSdk
+    buildToolsVersion rootProject.ext.versions.buildTools
 
     defaultConfig {
-        minSdkVersion globalConfiguration["androidMinSdkVersion"]
-        targetSdkVersion globalConfiguration["androidTargetSdkVersion"]
-        multiDexEnabled = true
-    }
-
-    dexOptions {
-        preDexLibraries = false
-        dexInProcess = false
-        javaMaxHeapSize "4g"
+        minSdkVersion rootProject.ext.versions.minSdk
+        targetSdkVersion rootProject.ext.versions.targetSdk
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
-
-    packagingOptions {
-        exclude 'LICENSE.txt'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-    }
-
-    lintOptions {
-        quiet true
-        abortOnError false
-        ignoreWarnings true
-        disable 'InvalidPackage'            //Some libraries have issues with this.
-        disable 'OldTargetApi'              //Lint gives this warning but SDK 20 would be Android L Beta.
-        disable 'IconDensities'             //For testing purpose. This is safe to remove.
-        disable 'IconMissingDensityFolder'  //For testing purpose. This is safe to remove.
-    }
-
-    buildToolsVersion '27.0.3'
 }
 
 dependencies {
-    def cacheDependencies = rootProject.ext.cacheDependencies
-    def cacheTestDependencies = rootProject.ext.cacheTestDependencies
+    Map deps = rootProject.ext.deps.lib
+    Map testDeps = rootProject.ext.deps.test
 
     implementation project(':data')
 
-    implementation cacheDependencies.kotlin
-    implementation cacheDependencies.rxKotlin
-    implementation cacheDependencies.gson
-    implementation cacheDependencies.roomRuntime
-    kapt cacheDependencies.roomCompiler
+    implementation deps.kotlin
+    implementation deps.rxKotlin
+    implementation deps.gson
+    implementation deps.roomRuntime
+    kapt deps.roomCompiler
 
-    testImplementation cacheTestDependencies.junit
-    testImplementation cacheTestDependencies.kotlinJUnit
-    testImplementation cacheTestDependencies.mockito
-    testImplementation cacheTestDependencies.assertj
-    testImplementation cacheTestDependencies.robolectric
-    testImplementation cacheTestDependencies.archTesting
-    testImplementation cacheTestDependencies.roomTesting
+    testImplementation testDeps.jUnit
+    testImplementation testDeps.kotlinJUnit
+    testImplementation testDeps.mockitoKotlin
+    testImplementation testDeps.assertj
+    testImplementation testDeps.robolectric
+    testImplementation testDeps.archTesting
+    testImplementation testDeps.roomTesting
 }

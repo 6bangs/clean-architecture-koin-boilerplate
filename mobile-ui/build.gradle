@@ -1,19 +1,24 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
 
 android {
-    def globalConfiguration = rootProject.extensions.getByName("ext")
-
-    compileSdkVersion globalConfiguration["androidCompileSdkVersion"]
+    compileSdkVersion rootProject.ext.versions.compileSdk
+    buildToolsVersion rootProject.ext.versions.buildTools
 
     defaultConfig {
-        minSdkVersion globalConfiguration["androidMinSdkVersion"]
-        targetSdkVersion globalConfiguration["androidTargetSdkVersion"]
+        minSdkVersion rootProject.ext.versions.minSdk
+        targetSdkVersion rootProject.ext.versions.targetSdk
+
+        multiDexEnabled true
+
         testInstrumentationRunner "org.buffer.android.boilerplate.ui.test.TestRunner"
     }
 
     dexOptions {
+        preDexLibraries = true
+        maxProcessCount 8
         javaMaxHeapSize "4g"
     }
 
@@ -22,77 +27,60 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
-    packagingOptions {
-        exclude 'LICENSE.txt'
-        exclude 'META-INF/DEPENDENCIES'
-        exclude 'META-INF/ASL2.0'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE'
-    }
-
-    lintOptions {
-        quiet true
-        abortOnError false
-        ignoreWarnings true
-    }
-
 }
 
 dependencies {
-    def mobileUiDependencies = rootProject.ext.mobileUiDependencies
-    def mobileUiTestDependencies = rootProject.ext.mobileUiTestDependencies
+    Map deps = rootProject.ext.deps.lib
+    Map testDeps = rootProject.ext.deps.test
 
     implementation project(':data')
     implementation project(':cache')
     implementation project(':remote')
 
-    implementation mobileUiDependencies.kotlin
-    implementation mobileUiDependencies.rxKotlin
-    implementation mobileUiDependencies.androidAnnotations
-    implementation mobileUiDependencies.appCompatV7
-    implementation mobileUiDependencies.supportRecyclerView
-    implementation mobileUiDependencies.supportDesign
-    implementation mobileUiDependencies.timber
-    implementation mobileUiDependencies.rxAndroid
-    implementation mobileUiDependencies.glide
-    implementation mobileUiDependencies.koin
-    implementation mobileUiDependencies.koinArch
-    implementation "org.koin:koin-android-scope:1.0.0-RC-1"
-    annotationProcessor "android.arch.lifecycle:compiler:1.1.1" // use kapt for Kotlin
-    // alternately - if using Java8, use the following instead of compiler
-    implementation "android.arch.lifecycle:common-java8:1.1.1"
+    implementation deps.kotlin
+    implementation deps.androidAnnotations
+    implementation deps.timber
+    implementation deps.koin
+    implementation deps.koinAndroidScope
+    implementation deps.koinArch
+    implementation deps.rxKotlin
+    implementation deps.rxAndroid
+    implementation deps.roomRxJava
+    implementation deps.appCompatV7
+    implementation deps.supportDesign
+    implementation deps.supportRecyclerView
+    implementation deps.archExtensions
+    implementation deps.glide
+    kapt deps.archCompiler
 
-    compile presentationDependencies.archExtensions
-    compile "android.arch.persistence.room:rxjava2:1.1.1"
-
-    testImplementation mobileUiTestDependencies.kotlinJUnit
-    androidTestImplementation "android.arch.core:core-testing:1.1.1"
-    androidTestImplementation ('org.koin:koin-test:1.0.0-RC-1', {
+    testImplementation testDeps.kotlinJUnit
+    androidTestImplementation testDeps.archTesting
+    androidTestImplementation (testDeps.koinTest, {
         exclude group: 'org.jetbrains.kotlin'
         exclude group: 'org.mockito'
     })
-    testImplementation mobileUiTestDependencies.mockito
+    testImplementation testDeps.mockitoKotlin
 
     // Instrumentation test dependencies
-    androidTestImplementation mobileUiTestDependencies.junit
-    androidTestImplementation (mobileUiTestDependencies.mockito, {
+    androidTestImplementation testDeps.jUnit
+    androidTestImplementation (testDeps.mockitoKotlin, {
         exclude group: 'org.jetbrains.kotlin'
         exclude group: 'org.mockito'
     })
-    androidTestImplementation mobileUiTestDependencies.mockitoAndroid
-    androidTestImplementation (mobileUiTestDependencies.espressoCore) {
+    androidTestImplementation testDeps.mockitoAndroid
+    androidTestImplementation (testDeps.espressoCore) {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation (mobileUiTestDependencies.androidRunner) {
+    androidTestImplementation (testDeps.androidRunner) {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation (mobileUiTestDependencies.androidRules) {
+    androidTestImplementation (testDeps.androidRules) {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation (mobileUiTestDependencies.espressoIntents) {
+    androidTestImplementation (testDeps.espressoIntents) {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
-    androidTestImplementation(mobileUiTestDependencies.espressoContrib) {
+    androidTestImplementation(testDeps.espressoContrib) {
         exclude module: 'appcompat'
         exclude module: 'appcompat-v7'
         exclude module: 'support-v4'
